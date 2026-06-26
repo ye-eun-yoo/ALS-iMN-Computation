@@ -37,11 +37,6 @@ REPO_DIR="." Rscript scripts/05_de_enet_pipeline.R
 REPO_DIR="." Rscript scripts/06_temporal_analysis.R
 ```
 
-Or on an LSF cluster:
-```bash
-bash submit/submit_all.sh
-```
-
 ## Dependencies
 
 R packages: `edgeR`, `glmnet`, `ranger`, `pROC`, `ggplot2`, `ggrepel`, `dplyr`, `tidyr`  
@@ -56,5 +51,5 @@ All available from Bioconductor 3.20 / CRAN.
 
 ## Data citation
 
-Nakamura et al. (2025) *Integrated temporal profiling of iPSC-derived motor neurons.*  
+Ma GM, Xia CC, Lyu BY, Liu J et al. Integrated profiling of iPSC-derived motor neurons carrying C9orf72, FUS, TARDBP, or SOD1 mutations. *Stem Cell Reports* 2025 Oct 14;20(10):102649. PMID: 41043426.  
 GEO: [GSE299997](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE299997) | License: CC BY 4.0
