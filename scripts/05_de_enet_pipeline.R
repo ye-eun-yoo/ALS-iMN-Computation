@@ -135,7 +135,7 @@ cv_results <- lapply(names(gene_sets), function(nm) {
                    nfolds = 10, type.measure = "auc", standardize = FALSE)
   coefs <- coef(cv, s = "lambda.1se")[-1, 1]
   list(cv = cv, gene_set = nm, n_input = length(gs),
-       n_selected = sum(coefs != 0), best_auc = max(cv$cvm),
+       n_selected = sum(coefs != 0), best_auc = min(max(cv$cvm), 1.0),
        coefs = coefs[coefs != 0])
 })
 names(cv_results) <- names(gene_sets)
@@ -157,7 +157,8 @@ p3 <- ggplot(auc_df, aes(gene_set, best_auc, fill = gene_set)) +
   scale_fill_manual(values = c("All genes" = "#4dac26",
                                 "DE FDR<0.20" = "#f1b6da",
                                 "DE FDR<0.05" = "#d01c8b")) +
-  scale_y_continuous(limits = c(0, 1.08), labels = scales::percent) +
+  scale_y_continuous(limits = c(0, 1.12), oob = scales::squish,
+                     labels = scales::percent) +
   labs(title = "DE pre-filtering - does it improve elastic net?",
        subtitle = "10-fold CV AUC | Elastic Net (alpha=0.5) | iMN day 28",
        x = "Gene set", y = "Best CV AUC") +
