@@ -1,0 +1,4 @@
+"alpha","method","best_cv_auc","n_genes_1se","lambda_1se"
+0,"Ridge (alpha=0)",1.1135,33747,48.48382
+0.5,"Elastic Net (alpha=0.5)",1.2557,57,0.04197
+1,"LASSO (alpha=1)",1.29,19,0.01447

@@ -4,13 +4,13 @@
 ## ready-to-use feature matrices for each stage (iMN_day28, iMN_day50).
 ##
 ## Outputs:
-##   data/features_iMN_day28.RDS  — list(X, y_binary, y_multi, meta)
+##   data/features_iMN_day28.RDS  - list(X, y_binary, y_multi, meta)
 ##   data/features_iMN_day50.RDS
 ##   plots/01_qc/01_libsize.pdf
 ##   plots/01_qc/02_pca_stages.pdf
 ##   plots/01_qc/03_pca_genotypes.pdf
 
-REPO_DIR  <- Sys.getenv("REPO_DIR", unset = ".")
+REPO_DIR  <- Sys.getenv("REPO_DIR", unset = "/rdcw/fs1/jmilbrandt/Active/Neuronal_Resilience_Program/ALS-iMN-ML")
 DATA_DIR  <- file.path(REPO_DIR, "data")
 PLOT_DIR  <- file.path(REPO_DIR, "plots", "01_qc")
 dir.create(PLOT_DIR, showWarnings = FALSE, recursive = TRUE)
@@ -46,7 +46,7 @@ p1 <- ggplot(meta, aes(x = reorder(sample_id, lib.size), y = lib.size / 1e6,
                         fill = Stage_label)) +
   geom_col() +
   scale_fill_manual(values = STAGE_COLORS, name = "Stage") +
-  labs(title = "GSE299997 — Library sizes",
+  labs(title = "GSE299997 - Library sizes",
        x = NULL, y = "Mapped reads (M)") +
   theme_bw(base_size = 9) +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
@@ -66,7 +66,7 @@ p2 <- ggplot(pca_df, aes(PC1, PC2, color = Stage, shape = Genotype)) +
   geom_point(size = 3, alpha = 0.85) +
   scale_color_manual(values = STAGE_COLORS) +
   scale_shape_manual(values = c(16, 15, 17, 18, 8)) +
-  labs(title = "PCA — all samples, all stages",
+  labs(title = "PCA - all samples, all stages",
        x = sprintf("PC1 (%s%%)", pve[1]), y = sprintf("PC2 (%s%%)", pve[2])) +
   theme_bw(base_size = 11)
 ggsave(file.path(PLOT_DIR, "02_pca_stages.pdf"), p2, width = 7, height = 5)
@@ -83,7 +83,7 @@ p3 <- ggplot(df28, aes(PC1, PC2, color = Genotype, label = Line)) +
   geom_point(size = 4, alpha = 0.8) +
   ggrepel::geom_text_repel(size = 2.5, max.overlaps = 20) +
   scale_color_manual(values = GENOTYPE_COLORS) +
-  labs(title = "PCA — iMN day 28 by genotype",
+  labs(title = "PCA - iMN day 28 by genotype",
        x = sprintf("PC1 (%s%%)", pve28[1]), y = sprintf("PC2 (%s%%)", pve28[2])) +
   theme_bw(base_size = 11)
 ggsave(file.path(PLOT_DIR, "03_pca_genotype_day28.pdf"), p3, width = 6, height = 5)
@@ -92,7 +92,7 @@ ggsave(file.path(PLOT_DIR, "03_pca_genotype_day28.pdf"), p3, width = 6, height =
 build_features <- function(stage) {
   idx    <- meta$Stage_label == stage
   m      <- meta[idx, ]
-  X      <- t(logcpm[, idx])   # samples × genes
+  X      <- t(logcpm[, idx])   # samples x genes
   X      <- scale(X)            # z-score across samples per gene
   list(
     X        = X,

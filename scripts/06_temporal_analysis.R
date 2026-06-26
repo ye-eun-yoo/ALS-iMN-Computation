@@ -1,19 +1,19 @@
-## Script 06: Temporal Analysis — Disease Signatures Across Differentiation Stages
+## Script 06: Temporal Analysis - Disease Signatures Across Differentiation Stages
 ##
-## iPSC-derived neurons go through: iPSC → NPC → iMN day28 → iMN day50
+## iPSC-derived neurons go through: iPSC -> NPC -> iMN day28 -> iMN day50
 ## Questions:
 ##   1. Does the ALS transcriptional signature emerge or strengthen over time?
-##      (Train on day28, test on day50 — compare AUC)
+##      (Train on day28, test on day50 - compare AUC)
 ##   2. Do the same genes drive ALS classification at both timepoints?
 ##   3. PCA trajectory: how do genotypes diverge across differentiation?
 ##
 ## Outputs (plots/06_temporal/):
-##   01_pca_trajectory.pdf   — PCA colored by stage + genotype
-##   02_auc_temporal.pdf     — binary ALS AUC at day28 vs day50
-##   03_feature_overlap.pdf  — Venn: genes selected at day28 vs day50
-##   04_logfc_heatmap.pdf    — top genes: logFC at day28 vs day50
+##   01_pca_trajectory.pdf   - PCA colored by stage + genotype
+##   02_auc_temporal.pdf     - binary ALS AUC at day28 vs day50
+##   03_feature_overlap.pdf  - Venn: genes selected at day28 vs day50
+##   04_logfc_heatmap.pdf    - top genes: logFC at day28 vs day50
 
-REPO_DIR  <- Sys.getenv("REPO_DIR", unset = ".")
+REPO_DIR  <- Sys.getenv("REPO_DIR", unset = "/rdcw/fs1/jmilbrandt/Active/Neuronal_Resilience_Program/ALS-iMN-ML")
 DATA_DIR  <- file.path(REPO_DIR, "data")
 PLOT_DIR  <- file.path(REPO_DIR, "plots", "06_temporal")
 RES_DIR   <- file.path(REPO_DIR, "results")
@@ -59,7 +59,7 @@ pca_df <- data.frame(
 stage_order <- c("iPSC", "NPC", "iMN_day28", "iMN_day50")
 pca_df$Stage <- factor(pca_df$Stage, levels = stage_order)
 
-# Centroids per Stage × Genotype for trajectory arrows
+# Centroids per Stage x Genotype for trajectory arrows
 centroids <- pca_df %>%
   group_by(Stage, Genotype) %>%
   summarise(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop") %>%
@@ -76,7 +76,7 @@ p1 <- ggplot(pca_df, aes(PC1, PC2, color = Genotype, shape = Stage)) +
   scale_fill_manual(values  = GENOTYPE_COLORS) +
   scale_shape_manual(values = c(iPSC = 16, NPC = 17, iMN_day28 = 15, iMN_day50 = 18),
                      name = "Stage") +
-  labs(title = "Differentiation trajectory — iPSC → NPC → iMN day28 → day50",
+  labs(title = "Differentiation trajectory - iPSC -> NPC -> iMN day28 -> day50",
        subtitle = "Arrows connect stage centroids per genotype",
        x = sprintf("PC1 (%s%%)", pve[1]), y = sprintf("PC2 (%s%%)", pve[2])) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
@@ -121,7 +121,7 @@ p2 <- ggplot(auc_df, aes(Stage, CV_AUC, fill = Stage)) +
   scale_fill_manual(values = c("iMN day 28" = "#41b6c4", "iMN day 50" = "#225ea8")) +
   scale_y_continuous(limits = c(0, 1.1)) +
   labs(title = "Does the ALS signature strengthen over differentiation?",
-       subtitle = "Elastic net (α=0.5), 10-fold CV AUC | ALS vs Healthy",
+       subtitle = "Elastic net (alpha=0.5), 10-fold CV AUC | ALS vs Healthy",
        x = NULL, y = "Best CV AUC") +
   theme_bw(base_size = 12) + theme(legend.position = "none")
 ggsave(file.path(PLOT_DIR, "02_auc_day28_vs_day50.pdf"), p2, width = 5, height = 4)

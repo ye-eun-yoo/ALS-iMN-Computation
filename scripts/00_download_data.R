@@ -1,4 +1,4 @@
-## GSE299997 — Download and prepare count data from GEO
+## GSE299997 - Download and prepare count data from GEO
 ##
 ## Dataset: "Integrated temporal profiling of iPSC-derived motor neurons from
 ##   ALS patients carrying C9orf72, FUS, TARDBP, and SOD1 mutations"
@@ -6,8 +6,8 @@
 ##
 ## Run this script once to download raw counts from GEO.
 ## Outputs saved to data/:
-##   GSE299997_DGEList.RDS  — filtered/TMM-normalized DGEList
-##   GSE299997_metadata.csv — sample metadata with genotype/stage labels
+##   GSE299997_DGEList.RDS  - filtered/TMM-normalized DGEList
+##   GSE299997_metadata.csv - sample metadata with genotype/stage labels
 
 REPO_DIR <- Sys.getenv("REPO_DIR", unset = ".")
 DATA_DIR <- file.path(REPO_DIR, "data")
@@ -71,7 +71,7 @@ shared <- intersect(colnames(counts_mat), rownames(meta_geo))
 counts_mat <- counts_mat[, shared, drop = FALSE]
 sample_df  <- cbind(sample_df[shared, ], meta_geo[shared, c("geo_accession", "cell_line")])
 
-# Parse genotype from cell_line ("SOD1-2" → "SOD1")
+# Parse genotype from cell_line ("SOD1-2" -> "SOD1")
 sample_df$genotype <- sub("-[0-9]+$", "", sample_df$cell_line)
 sample_df$condition <- ifelse(sample_df$genotype == "Healthy", "Healthy", "ALS")
 sample_df$genotype  <- factor(sample_df$genotype,

@@ -1,4 +1,4 @@
-## Script 02: Elastic Net — Binary Classification (ALS vs Healthy, iMN day 28)
+## Script 02: Elastic Net - Binary Classification (ALS vs Healthy, iMN day 28)
 ##
 ## Unbiased gene discovery: penalized logistic regression sweeps 17,000+ genes
 ## simultaneously to find which subset best discriminates ALS from healthy
@@ -6,16 +6,16 @@
 ##
 ## Method: glmnet elastic net (alpha=0.5), 10-fold CV for lambda selection.
 ## Note: with 3 replicates/line and 13 lines, CV folds may split replicates
-##   from the same donor into train/test — treat AUC as an estimate of
+##   from the same donor into train/test - treat AUC as an estimate of
 ##   discriminative power rather than unbiased generalization error.
 ##
 ## Outputs (plots/02_elastic_net_binary/):
-##   01_cv_curve.pdf          — CV deviance / AUC vs log(lambda)
-##   02_coef_path.pdf         — regularization path: coefficients vs log(lambda)
-##   03_selected_heatmap.pdf  — top selected genes × samples heatmap
-##   04_roc_curve.pdf         — ROC with AUC
+##   01_cv_curve.pdf          - CV deviance / AUC vs log(lambda)
+##   02_coef_path.pdf         - regularization path: coefficients vs log(lambda)
+##   03_selected_heatmap.pdf  - top selected genes x samples heatmap
+##   04_roc_curve.pdf         - ROC with AUC
 
-REPO_DIR  <- Sys.getenv("REPO_DIR", unset = ".")
+REPO_DIR  <- Sys.getenv("REPO_DIR", unset = "/rdcw/fs1/jmilbrandt/Active/Neuronal_Resilience_Program/ALS-iMN-ML")
 DATA_DIR  <- file.path(REPO_DIR, "data")
 PLOT_DIR  <- file.path(REPO_DIR, "plots", "02_elastic_net_binary")
 RES_DIR   <- file.path(REPO_DIR, "results")
@@ -38,7 +38,7 @@ GENOTYPE_COLORS <- c(Healthy = "#4dac26", SOD1 = "#d01c8b",
 
 # ── Load features ─────────────────────────────────────────────────────────────
 feat <- readRDS(file.path(DATA_DIR, "features_iMN_day28.RDS"))
-X <- feat$X              # samples × genes, z-scored
+X <- feat$X              # samples x genes, z-scored
 y <- feat$y_binary       # Healthy / ALS
 
 cat(sprintf("Input: %d samples x %d genes\n", nrow(X), ncol(X)))
@@ -87,7 +87,7 @@ p1 <- ggplot(cv_df, aes(log_lambda, mean_auc)) +
            label = "lambda.min", hjust = -0.1, size = 3, color = "#d7191c") +
   annotate("text", x = lambda_1se_log, y = min(cv_df$mean_auc) + 0.01,
            label = "lambda.1se", hjust = 1.1, size = 3, color = "#d7191c") +
-  labs(title = "Elastic Net — 10-fold CV (alpha = 0.5)",
+  labs(title = "Elastic Net - 10-fold CV (alpha = 0.5)",
        subtitle = "ALS vs Healthy | iMN day 28",
        x = "log(lambda)", y = "Mean AUC (10-fold CV)") +
   theme_bw(base_size = 12)
@@ -95,7 +95,7 @@ ggsave(file.path(PLOT_DIR, "01_cv_auc_curve.pdf"), p1, width = 6, height = 4)
 
 # ── Plot 2: Regularization path (top 20 genes by |final coef|) ───────────────
 top_genes <- head(names(sel)[order(abs(sel), decreasing = TRUE)], 20)
-path_mat  <- as.matrix(coef(cv_fit$glmnet.fit)[-1, ])    # genes × lambdas
+path_mat  <- as.matrix(coef(cv_fit$glmnet.fit)[-1, ])    # genes x lambdas
 path_df   <- as.data.frame(path_mat[top_genes, , drop = FALSE])
 path_df$gene <- rownames(path_df)
 path_long <- pivot_longer(path_df, -gene, names_to = "lambda_idx", values_to = "coef") %>%
@@ -105,7 +105,7 @@ p2 <- ggplot(path_long, aes(log_lambda, coef, color = gene, group = gene)) +
   geom_line(linewidth = 0.7, alpha = 0.85) +
   geom_vline(xintercept = lambda_1se_log, linetype = "dotted", color = "grey40") +
   scale_color_viridis_d(option = "turbo") +
-  labs(title = "Regularization path — top 20 genes by |coefficient|",
+  labs(title = "Regularization path - top 20 genes by |coefficient|",
        subtitle = "Dotted = lambda.1se used for feature selection",
        x = "log(lambda)", y = "Coefficient", color = NULL) +
   guides(color = guide_legend(ncol = 1, key.height = unit(0.3, "cm"), label.theme = element_text(size = 7))) +
@@ -159,7 +159,7 @@ p4 <- ggplot(roc_df, aes(specificity, sensitivity)) +
   annotate("text", x = 0.6, y = 0.2,
            label = sprintf("AUC = %s\n(in-sample, lambda.1se)", auc_val),
            size = 4) +
-  labs(title = "ROC — Elastic Net, ALS vs Healthy",
+  labs(title = "ROC - Elastic Net, ALS vs Healthy",
        subtitle = "iMN day 28 | Note: in-sample AUC overestimates generalization",
        x = "1 - Specificity", y = "Sensitivity") +
   coord_equal() + theme_bw(base_size = 12)

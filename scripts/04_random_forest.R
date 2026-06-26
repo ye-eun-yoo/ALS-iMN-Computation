@@ -1,4 +1,4 @@
-## Script 04: Random Forest — Multi-class Genotype Classification
+## Script 04: Random Forest - Multi-class Genotype Classification
 ##
 ## Classifies motor neuron samples into 5 genotype classes:
 ##   Healthy / SOD1 / FUS / TARDBP / C9orf72
@@ -8,12 +8,12 @@
 ## Training: iMN day 28 | Evaluation: OOB error + held-out iMN day 50
 ##
 ## Outputs (plots/04_random_forest/):
-##   01_oob_error.pdf        — OOB classification error vs n trees
-##   02_importance.pdf       — top 30 genes by mean decrease in accuracy
-##   03_confusion_matrix.pdf — predicted vs true genotype (iMN day 50)
-##   04_class_accuracy.pdf   — per-class precision / recall
+##   01_oob_error.pdf        - OOB classification error vs n trees
+##   02_importance.pdf       - top 30 genes by mean decrease in accuracy
+##   03_confusion_matrix.pdf - predicted vs true genotype (iMN day 50)
+##   04_class_accuracy.pdf   - per-class precision / recall
 
-REPO_DIR  <- Sys.getenv("REPO_DIR", unset = ".")
+REPO_DIR  <- Sys.getenv("REPO_DIR", unset = "/rdcw/fs1/jmilbrandt/Active/Neuronal_Resilience_Program/ALS-iMN-ML")
 DATA_DIR  <- file.path(REPO_DIR, "data")
 PLOT_DIR  <- file.path(REPO_DIR, "plots", "04_random_forest")
 RES_DIR   <- file.path(REPO_DIR, "results")
@@ -48,13 +48,12 @@ X28 <- X28[, shared_genes];  X50 <- X50[, shared_genes]
 
 set.seed(42)
 
-# ── Train RF (ranger for speed, ~17k features) ────────────────────────────────
+# ── Train RF using x/y interface (avoids formula stack overflow with ~17k features)
 cat("\n=== Training Random Forest (500 trees, iMN day28) ===\n")
-train_df      <- as.data.frame(X28)
-train_df$y    <- y28
 
 rf_fit <- ranger(
-  y ~ ., data = train_df,
+  x                  = X28,
+  y                  = y28,
   num.trees          = 500,
   importance         = "permutation",
   probability        = TRUE,
@@ -63,25 +62,19 @@ rf_fit <- ranger(
 )
 cat(sprintf("OOB prediction error: %.3f\n", rf_fit$prediction.error))
 
-# ── Plot 1: OOB error convergence ─────────────────────────────────────────────
-# Refit tracking OOB at each tree step (ranger stores this)
-rf_oob <- ranger(y ~ ., data = train_df, num.trees = 500,
-                 importance = "none", keep.inbag = FALSE,
-                 num.threads = 4, seed = 42)
-
-# ranger doesn't expose per-tree OOB natively; refit at intervals
-tree_seq <- seq(10, 500, by = 10)
+# ── Plot 1: OOB error convergence (subsample tree counts) ────────────────────
+tree_seq <- c(10, 25, 50, 100, 200, 300, 400, 500)
 oob_seq  <- vapply(tree_seq, function(nt) {
-  rf_tmp <- ranger(y ~ ., data = train_df, num.trees = nt,
-                   probability = TRUE, num.threads = 4, seed = 42)
-  rf_tmp$prediction.error
+  ranger(x = X28, y = y28, num.trees = nt,
+         probability = TRUE, num.threads = 4, seed = 42)$prediction.error
 }, numeric(1))
 
 oob_df <- data.frame(n_trees = tree_seq, oob_error = oob_seq)
 p1 <- ggplot(oob_df, aes(n_trees, oob_error)) +
   geom_line(color = "#2c7bb6", linewidth = 0.8) +
-  geom_point(data = oob_df[nrow(oob_df), ], size = 3, color = "#d7191c") +
-  labs(title = "Random Forest — OOB error convergence",
+  geom_point(size = 3, color = "#2c7bb6") +
+  geom_point(data = oob_df[nrow(oob_df), ], size = 4, color = "#d7191c") +
+  labs(title = "Random Forest - OOB error convergence",
        subtitle = "Multi-class: Healthy / SOD1 / FUS / TARDBP / C9orf72 | iMN day 28",
        x = "Number of trees", y = "OOB classification error") +
   theme_bw(base_size = 12)
@@ -96,7 +89,7 @@ imp_df <- data.frame(
 
 p2 <- ggplot(imp_df, aes(importance, gene)) +
   geom_col(fill = "#2c7bb6", alpha = 0.8) +
-  labs(title = "Random Forest — Top 30 genes by permutation importance",
+  labs(title = "Random Forest - Top 30 genes by permutation importance",
        subtitle = "Mean decrease in classification accuracy when gene is permuted",
        x = "Mean decrease in accuracy", y = NULL) +
   theme_bw(base_size = 11)
@@ -109,8 +102,7 @@ write.csv(data.frame(gene = names(rf_fit$variable.importance),
 
 # ── Predict on iMN day 50 ────────────────────────────────────────────────────
 cat("\n=== Predicting on iMN day 50 (temporal transfer) ===\n")
-test_df  <- as.data.frame(X50)
-pred50   <- predict(rf_fit, data = test_df)
+pred50 <- predict(rf_fit, data = X50)
 pred_cls <- factor(colnames(pred50$predictions)[apply(pred50$predictions, 1, which.max)],
                    levels = levels(y28))
 true_cls <- factor(y50, levels = levels(y28))
@@ -126,7 +118,7 @@ p3 <- ggplot(cm_df, aes(True, Predicted, fill = pct)) +
   geom_tile(color = "white") +
   geom_text(aes(label = sprintf("%d\n(%.0f%%)", Freq, pct)), size = 3.2) +
   scale_fill_gradient(low = "white", high = "#2c7bb6", name = "% of true class") +
-  labs(title = "Random Forest — Confusion matrix (iMN day 50, held-out)",
+  labs(title = "Random Forest - Confusion matrix (iMN day 50, held-out)",
        subtitle = sprintf("Train: day28 | Test: day50 | Accuracy = %.1f%%", 100 * test_acc),
        x = "True genotype", y = "Predicted genotype") +
   theme_bw(base_size = 11) +
@@ -155,7 +147,7 @@ p4 <- ggplot(class_df, aes(genotype, value, fill = metric)) +
                     name = NULL) +
   scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
   labs(title = "Per-class precision and recall (day50 test set)",
-       subtitle = "C9orf72: n=1 line — interpret with caution",
+       subtitle = "C9orf72: n=1 line - interpret with caution",
        x = "Genotype", y = "Score") +
   theme_bw(base_size = 12) +
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
