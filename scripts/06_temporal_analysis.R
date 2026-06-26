@@ -97,7 +97,7 @@ fit_enet <- function(feat) {
                    nfolds = 10, type.measure = "auc", standardize = FALSE)
   coefs <- coef(cv, s = "lambda.1se")[-1, 1]
   sel   <- coefs[coefs != 0]
-  list(cv = cv, selected = sel, best_auc = max(cv$cvm))
+  list(cv = cv, selected = sel, best_auc = min(max(cv$cvm), 1.0))
 }
 
 res28 <- fit_enet(feat28)
@@ -119,7 +119,7 @@ p2 <- ggplot(auc_df, aes(Stage, CV_AUC, fill = Stage)) +
                                 CV_AUC, N_genes)),
             vjust = -0.3, size = 4) +
   scale_fill_manual(values = c("iMN day 28" = "#41b6c4", "iMN day 50" = "#225ea8")) +
-  scale_y_continuous(limits = c(0, 1.1)) +
+  scale_y_continuous(limits = c(0, 1.15), oob = scales::squish) +
   labs(title = "Does the ALS signature strengthen over differentiation?",
        subtitle = "Elastic net (alpha=0.5), 10-fold CV AUC | ALS vs Healthy",
        x = NULL, y = "Best CV AUC") +
