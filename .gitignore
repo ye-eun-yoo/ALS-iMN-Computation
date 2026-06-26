@@ -1,0 +1,13 @@
+# Data files — download via scripts/00_download_data.R
+data/
+rlib/
+logs/
+
+# R session
+.Rhistory
+.RData
+.Rproj.user/
+
+# macOS
+._*
+.DS_Store
