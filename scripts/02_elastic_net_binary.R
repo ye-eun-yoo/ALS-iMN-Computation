@@ -49,7 +49,8 @@ set.seed(42)
 # ── 10-fold CV elastic net (alpha = 0.5) ─────────────────────────────────────
 cat("\n=== Running 10-fold CV elastic net (alpha = 0.5) ===\n")
 cv_fit <- cv.glmnet(X, y, family = "binomial", alpha = 0.5,
-                    nfolds = 10, type.measure = "auc", standardize = FALSE)
+                    nfolds = 10, type.measure = "auc", standardize = FALSE,
+                    keep = TRUE)
 
 lambda_best <- cv_fit$lambda.1se
 cat(sprintf("Best lambda (1se): %.4f\n", lambda_best))
@@ -143,12 +144,15 @@ if (length(top30) > 0) {
          width = 9, height = max(5, length(top30) * 0.22 + 2))
 }
 
-# ── Plot 4: ROC curve (in-sample, for illustration) ──────────────────────────
-pred_prob <- predict(cv_fit, X, s = "lambda.1se", type = "response")[, 1]
-roc_obj   <- roc(y, pred_prob, levels = c("Healthy", "ALS"), direction = "<",
-                 quiet = TRUE)
-auc_val   <- round(as.numeric(auc(roc_obj)), 3)
-roc_df    <- data.frame(
+# ── Plot 4: ROC curve using cross-validated hold-out predictions ──────────────
+# cv_fit$fit.preval: linear predictors for each sample when it was in the
+# hold-out fold (requires keep=TRUE above). plogis() converts to probability.
+lambda_idx <- which.min(abs(cv_fit$lambda - cv_fit$lambda.1se))
+cv_pred    <- plogis(cv_fit$fit.preval[, lambda_idx])
+roc_obj    <- roc(y, cv_pred, levels = c("Healthy", "ALS"), direction = "<",
+                  quiet = TRUE)
+auc_val    <- round(as.numeric(auc(roc_obj)), 3)
+roc_df     <- data.frame(
   sensitivity = rev(roc_obj$sensitivities),
   specificity = rev(1 - roc_obj$specificities)
 )
@@ -157,10 +161,10 @@ p4 <- ggplot(roc_df, aes(specificity, sensitivity)) +
   geom_line(color = "#2c7bb6", linewidth = 1) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60") +
   annotate("text", x = 0.6, y = 0.2,
-           label = sprintf("AUC = %s\n(in-sample, lambda.1se)", auc_val),
+           label = sprintf("AUC = %s\n(10-fold CV, lambda.1se)", auc_val),
            size = 4) +
   labs(title = "ROC - Elastic Net, ALS vs Healthy",
-       subtitle = "iMN day 28 | Note: in-sample AUC overestimates generalization",
+       subtitle = "iMN day 28 | 10-fold cross-validated predictions",
        x = "1 - Specificity", y = "Sensitivity") +
   coord_equal() + theme_bw(base_size = 12)
 ggsave(file.path(PLOT_DIR, "04_roc_curve.pdf"), p4, width = 5, height = 5)
